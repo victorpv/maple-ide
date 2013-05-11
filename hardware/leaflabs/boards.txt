@@ -13,15 +13,46 @@ maple.upload.auto_reset=true
 
 maple.build.board=maple
 maple.build.mcu=STM32F103RB
-maple.build.family=cortex-m3
+maple.build.series=stm32f1
+maple.build.line=performance
+maple.build.mem=sram_20k_flash_128k
+maple.build.mcpu=cortex-m3
 maple.build.f_cpu=72000000L
 maple.build.core=maple
 maple.build.vect=VECT_TAB_FLASH
-maple.build.linker=maple/flash.ld
+maple.build.linker=flash.ld
 maple.build.using=armcompiler
-maple.build.density=STM32_MEDIUM_DENSITY
+#maple.build.density=STM32_MEDIUM_DENSITY
 maple.build.error_led_port=GPIOA
 maple.build.error_led_pin=5
+
+##############################################################
+maple_midi.name=LeafLabs Maple Rev 3+ to Flash with MIDI over USB
+
+maple_midi.upload.file_type=bin
+maple_midi.upload.maximum_size=108000
+maple_midi.upload.ram.maximum_size=17000
+maple_midi.upload.flash.maximum_size=108000
+maple_midi.upload.usbID=1EAF:0003
+maple_midi.upload.altID=1
+maple_midi.upload.uploader=dfu-util
+maple.upload.auto_reset=true
+
+maple_midi.build.usb_type=USB_MIDI
+maple_midi.build.board=maple
+maple_midi.build.mcu=STM32F103RB
+maple_midi.build.series=stm32f1
+maple_midi.build.line=performance
+maple_midi.build.mem=sram_20k_flash_128k
+maple_midi.build.mcpu=cortex-m3
+maple_midi.build.f_cpu=72000000L
+maple_midi.build.core=maple
+maple_midi.build.vect=VECT_TAB_FLASH
+maple_midi.build.linker=flash.ld
+maple_midi.build.using=armcompiler
+#maple_midi.build.density=STM32_MEDIUM_DENSITY
+maple_midi.build.error_led_port=GPIOA
+maple_midi.build.error_led_pin=5
 
 ##############################################################
 mapleRAM.name=LeafLabs Maple Rev 3+ to RAM
@@ -44,9 +75,35 @@ mapleRAM.build.submdl=stm32f103
 mapleRAM.build.vect=VECT_TAB_RAM
 mapleRAM.build.linker=maple/ram.ld
 mapleRAM.build.using=armcompiler
-mapleRAM.build.density=STM32_MEDIUM_DENSITY
+#mapleRAM.build.density=STM32_MEDIUM_DENSITY
 mapleRAM.build.error_led_port=GPIOA
 mapleRAM.build.error_led_pin=5
+
+##############################################################
+netduinoplus2JTAG.name=Netduino + 2 board to FLASH using ROM dfu
+
+netduinoplus2JTAG.upload.file_type=bin
+netduinoplus2JTAG.upload.maximum_size=1024000
+netduinoplus2JTAG.upload.ram.maximum_size=128000
+netduinoplus2JTAG.upload.flash.maximum_size=1024000
+netduinoplus2JTAG.upload.usbID=0483:df11
+netduinoplus2JTAG.upload.altID=0
+netduinoplus2JTAG.upload.uploader=dfu-util
+netduinoplus2JTAG.upload.auto_reset=true
+
+netduinoplus2JTAG.build.usb_type=USB_NONE
+netduinoplus2JTAG.build.board=netduino_plus_2
+netduinoplus2JTAG.build.mcu=STM32F405RG
+netduinoplus2JTAG.build.family=cortex-m4
+netduinoplus2JTAG.build.f_cpu=168000000L
+netduinoplus2JTAG.build.core=maple
+netduinoplus2JTAG.build.series=stm32f4
+netduinoplus2JTAG.build.vect=VECT_TAB_BASE
+netduinoplus2JTAG.build.linker=flash.ld
+netduinoplus2JTAG.build.using=armcompiler
+#netduinoplus2JTAG.build.density=STM32_MEDIUM_DENSITY
+netduinoplus2JTAG.build.error_led_port=GPIOA
+netduinoplus2JTAG.build.error_led_pin=5
 
 ##############################################################
 maple_mini.name=LeafLabs Maple Mini Rev 2 to Flash

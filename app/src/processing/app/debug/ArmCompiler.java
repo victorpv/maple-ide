@@ -100,13 +100,47 @@ public class ArmCompiler extends Compiler {
 
     List<File> objectFiles = new ArrayList<File>();
     List<File> includePaths = new ArrayList<File>(Arrays.asList(corePath));
-
+    includePaths.add(new File(corePath, "libmaple"));
+    includePaths.add(new File(corePath, "wirish"));
+    includePaths.add(new File(corePath, "libmaple"+File.separator+"include"));
+    includePaths.add(new File(corePath, "wirish"+File.separator+"include"));
+    includePaths.add(new File(corePath, "wirish"+File.separator+"include"+File.separator+"wirish"));
+    includePaths.add(new File(corePath, "libmaple"+File.separator+boardPrefs.get("build.series")+File.separator+"include"));
+    includePaths.add(new File(corePath, "wirish"+File.separator+"boards"+File.separator+boardPrefs.get("build.board")+File.separator+"include"));
+    includePaths.add(new File(corePath, "libmaple"+File.separator+"usb"+File.separator+"usb_lib"));
+    includePaths.add(new File(corePath, "libmaple"+File.separator+"usb"+File.separator+boardPrefs.get("build.series")));
 
     // 1. compile the core (e.g. libmaple for a Maple target),
     // outputting .o files to buildPath.
-    System.out.print("\tCompiling core...\n");
+    System.out.print("\tCompiling core...libmaple\n");
     objectFiles.addAll(compileFiles(buildPath, includePaths,
-                                    corePath.getAbsolutePath(), true));
+                                    corePath.getAbsolutePath()+File.separator+"libmaple", false));
+    System.out.print("\tCompiling core...wirish\n");
+    objectFiles.addAll(compileFiles(buildPath, includePaths,
+                                    corePath.getAbsolutePath()+File.separator+"wirish", false));
+
+    // Processor specific files, this should be inferred or read from board information
+    File outputFolder = new File(buildPath, boardPrefs.get("build.series"));
+    createFolder(outputFolder);
+    objectFiles.addAll(compileFiles(buildPath+File.separator+boardPrefs.get("build.series"), includePaths,
+                                    corePath.getAbsolutePath()+File.separator+"libmaple"+File.separator+boardPrefs.get("build.series"), false));
+                                    
+    objectFiles.addAll(compileFiles(buildPath+File.separator+boardPrefs.get("build.series"), includePaths,
+                                    corePath.getAbsolutePath()+File.separator+"libmaple"+File.separator+boardPrefs.get("build.series")+File.separator+boardPrefs.get("build.line"), false));
+
+    objectFiles.addAll(compileFiles(buildPath+File.separator+boardPrefs.get("build.series"), includePaths,
+                                    corePath.getAbsolutePath()+File.separator+"wirish"+File.separator+boardPrefs.get("build.series"), false));
+    // Board specific files
+    objectFiles.addAll(compileFiles(buildPath, includePaths,
+                                    corePath.getAbsolutePath()+File.separator+"wirish"+File.separator+"boards"+File.separator+boardPrefs.get("build.board"), false));
+
+    // Usb files
+    if ((boardPrefs.get("build.usb_type") == null) || (!boardPrefs.get("build.usb_type").equals("USB_NONE"))) {
+        objectFiles.addAll(compileFiles(buildPath, includePaths,
+                                    corePath.getAbsolutePath()+File.separator+"libmaple"+File.separator+"usb"+File.separator+"usb_lib", false));
+        objectFiles.addAll(compileFiles(buildPath, includePaths,
+                                    corePath.getAbsolutePath()+File.separator+"libmaple"+File.separator+"usb"+File.separator+boardPrefs.get("build.series"), false));
+    }
 
     // 2. compile the libraries, updating includePaths as necessary.
     objectFiles.addAll(compileLibraries(includePaths));
@@ -228,7 +262,16 @@ public class ArmCompiler extends Compiler {
   private File linkFiles(List<File> objectFiles) throws RunnerException {
     System.out.println("\tLinking...");
 
-    File linkerScript = new File(corePath, boardPrefs.get("build.linker"));
+/* This is a real nasty hack Ugly */
+    File linkerScript = new File(corePath,"support"+File.separator+"ld"+File.separator+boardPrefs.get("build.linker"));
+    File scriptIncludes = new File(corePath, "support"+File.separator+"ld");
+    File seriesScriptIncludes;
+    if (boardPrefs.get("build.series").equals("stm32f1")) {
+        seriesScriptIncludes = new File(corePath, "support"+File.separator+"ld"+File.separator+"stm32"+File.separator+"series"+File.separator+boardPrefs.get("build.series")+File.separator+"performance");
+    } else {
+        seriesScriptIncludes = new File(corePath, "support"+File.separator+"ld"+File.separator+"stm32"+File.separator+"series"+File.separator+boardPrefs.get("build.series"));
+    }
+    File memScriptIncludes = new File(corePath, "support"+File.separator+"ld"+File.separator+"stm32"+File.separator+"mem"+File.separator+boardPrefs.get("build.mem"));
     File elf = new File(buildPath, primaryClassName + ".elf");
     File bin = new File(buildPath, primaryClassName + ".bin");
 
@@ -238,18 +281,23 @@ public class ArmCompiler extends Compiler {
        (Base.getArmBasePath() + "arm-none-eabi-g++",
         "-T" + linkerScript.getAbsolutePath(),
         "-L" + corePath.getAbsolutePath(),
-        "-mcpu=cortex-m3",
+        "-L" + scriptIncludes.getAbsolutePath(),
+        "-L" + seriesScriptIncludes.getAbsolutePath(),
+        "-L" + memScriptIncludes.getAbsolutePath(),
+        "-mcpu="+boardPrefs.get("build.mcpu"),
         "-mthumb",
-        "-Xlinker",
-        "--gc-sections",
-        "--print-gc-sections",
-        "--march=armv7-m",
+//        "-nostartfiles",
+        "-Xlinker", "--gc-sections",
+        "-Xlinker", "-Map="+elf.getAbsolutePath()+".map",
+        "-Xassembler",
+//        "--march=armv7-m",
         "-Wall",
         "-o", elf.getAbsolutePath()));
 
     for (File f: objectFiles) linkCommand.add(f.getAbsolutePath());
 
     linkCommand.add("-L" + buildPath);
+    linkCommand.add("-lm");
 
     execAsynchronously(linkCommand);
 
@@ -288,7 +336,7 @@ public class ArmCompiler extends Compiler {
     (List<File> includePaths, String sourceName, String buildPath,
      List<File> hackObjectPaths) {
 
-    String buildBase = getBuildBase(sourceName);
+    String buildBase = getBuildBase(sourceName, buildPath);
     File depsFile = new File(buildBase + ".d");
     File objFile = new File(buildBase + ".o");
 
@@ -299,7 +347,7 @@ public class ArmCompiler extends Compiler {
     command.addAll
       (Arrays.asList
        (Base.getArmBasePath() + "arm-none-eabi-gcc",
-        "-mcpu=cortex-m3",
+        "-mcpu="+boardPrefs.get("build.mcpu"),
         "-march=armv7-m",
         "-mthumb",
         "-DBOARD_" + boardPrefs.get("build.board"),
@@ -308,10 +356,18 @@ public class ArmCompiler extends Compiler {
         "-DERROR_LED_PORT=" + boardPrefs.get("build.error_led_port"),
         "-DERROR_LED_PIN=" + boardPrefs.get("build.error_led_pin"),
         "-DMAPLE_IDE",
-        "-x", "assembler-with-cpp",
-        "-o", objFile.getAbsolutePath(),
+        "-x", "assembler-with-cpp"));
+
+    for (File i: includePaths) {
+      command.add("-I" + i.getAbsolutePath());
+    }
+
+    command.addAll
+      (Arrays.asList
+       ("-o", objFile.getAbsolutePath(),
         "-c",
         sourceName));
+
 
     return command;
   }
@@ -321,7 +377,7 @@ public class ArmCompiler extends Compiler {
     (List<File> includePaths, String sourceName, String buildPath,
      List<File> hackObjectPaths) {
 
-    String buildBase = getBuildBase(sourceName);
+    String buildBase = getBuildBase(sourceName, buildPath);
     File depsFile = new File(buildBase + ".d");
     File objFile = new File(buildBase + ".o");
 
@@ -334,9 +390,9 @@ public class ArmCompiler extends Compiler {
        (Base.getArmBasePath() + "arm-none-eabi-gcc",
         "-Os",
         "-g",
-        "-mcpu=cortex-m3",
+        "-mcpu="+boardPrefs.get("build.mcpu"),
         "-mthumb",
-        "-march=armv7-m",
+//        "-march=armv7-m",
         "-nostdlib",
         "-ffunction-sections",
         "-fdata-sections",
@@ -346,9 +402,14 @@ public class ArmCompiler extends Compiler {
         "-D" + boardPrefs.get("build.vect"),
         "-D" + boardPrefs.get("build.density"),
         "-DERROR_LED_PORT=" + boardPrefs.get("build.error_led_port"),
-        "-DERROR_LED_PIN=" + boardPrefs.get("build.error_led_pin"),
-        "-DMAPLE_IDE",
-        "-DARDUINO=" + Base.REVISION));
+        "-DERROR_LED_PIN=" + boardPrefs.get("build.error_led_pin")
+//        "-DMAPLE_IDE",
+//        "-DARDUINO=" + Base.REVISION
+    ));
+
+    if (boardPrefs.get("build.usb_type") != null) {
+        command.add("-DUSB_TYPE=" + boardPrefs.get("build.usb_type"));
+    }
 
     for (File i: includePaths) {
       command.add("-I" + i.getAbsolutePath());
@@ -357,8 +418,9 @@ public class ArmCompiler extends Compiler {
     command.addAll
       (Arrays.asList
        ("-o", objFile.getAbsolutePath(),
-        "-c",
-        sourceName));
+        "-c", sourceName,
+        "-Wa,-ahlms="+objFile.getAbsolutePath()+".lst"
+        ));
 
     return command;
   }
@@ -367,7 +429,7 @@ public class ArmCompiler extends Compiler {
     (List<File> includePaths, String sourceName, String buildPath,
      List<File> hackObjectPaths) {
 
-    String buildBase = getBuildBase(sourceName);
+    String buildBase = getBuildBase(sourceName, buildPath);
     File depsFile = new File(buildBase + ".d");
     File objFile = new File(buildBase + ".o");
 
@@ -380,9 +442,9 @@ public class ArmCompiler extends Compiler {
        (Base.getArmBasePath() + "arm-none-eabi-g++",
         "-Os",
         "-g",
-        "-mcpu=cortex-m3",
+        "-mcpu="+boardPrefs.get("build.mcpu"),
         "-mthumb",
-        "-march=armv7-m",
+//        "-march=armv7-m",
         "-nostdlib",
         "-ffunction-sections",
         "-fdata-sections",
@@ -392,8 +454,13 @@ public class ArmCompiler extends Compiler {
         "-D" + boardPrefs.get("build.density"),
         "-D" + boardPrefs.get("build.vect"),
         "-DERROR_LED_PORT=" + boardPrefs.get("build.error_led_port"),
-        "-DERROR_LED_PIN=" + boardPrefs.get("build.error_led_pin"),
-        "-DMAPLE_IDE"));
+        "-DERROR_LED_PIN=" + boardPrefs.get("build.error_led_pin")
+//        "-DMAPLE_IDE"
+        ));
+
+    if (boardPrefs.get("build.usb_type") != null) {
+        command.add("-DUSB_TYPE=" + boardPrefs.get("build.usb_type"));
+    }
 
     for (File i: includePaths) {
       command.add("-I" + i.getAbsolutePath());
@@ -410,7 +477,7 @@ public class ArmCompiler extends Compiler {
     return command;
   }
 
-  private String getBuildBase(String sourceFile) {
+  private String getBuildBase(String sourceFile, String buildPath) {
     File f = new File(sourceFile);
     String s = f.getName();
     return buildPath + File.separator + s.substring(0, s.lastIndexOf('.'));
