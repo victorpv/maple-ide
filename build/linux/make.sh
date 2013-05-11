@@ -1,8 +1,11 @@
 #!/bin/sh
 
-DIST_ARCHIVE=arm-2010q1-188-arm-none-eabi-toolchain-linux32.tar.gz
-DIST_URL=http://static.leaflabs.com/pub/codesourcery/
-
+# DIST_ARCHIVE=arm-2010q1-188-arm-none-eabi-toolchain-linux32.tar.gz
+# DIST_URL=http://static.leaflabs.com/pub/codesourcery/
+DIST_ARCHIVE=gcc-arm-none-eabi-4_7-2013q1-20130313-linux.tar.bz2
+DIST_URL=https://launchpad.net/gcc-arm-embedded/4.7/4.7-2013-q1-update/+download/
+DIST_FOLDER=gcc-arm-none-eabi-4_7-2013q1
+ 
 # Set JAVA_HOME only if it is blank
 # Modify this if you aren't using java-6-sun; needed for lib/tools.jar
 JAVA_HOME=${JAVA_HOME:="/usr/lib/jvm/java-6-sun/"}
@@ -25,12 +28,13 @@ then
     fi
   fi
   echo "Extracting distribution files for linux platform: " $DIST_ARCHIVE
-  tar --extract --file=$DIST_ARCHIVE --ungzip --directory=dist/tools/
-  if test ! -d dist/tools/arm
+  tar --extract --file=$DIST_ARCHIVE --auto-compress --directory=dist/tools/
+  if test ! -d dist/tools/$DIST_FOLDER
   then
     echo "!!! Problem extracting dist file, please fix it."
     exit 1
   fi
+  ln -s -r dist/tools/$DIST_FOLDER dist/tools/arm
 fi
 
 ### -- SETUP WORK DIR -------------------------------------------
