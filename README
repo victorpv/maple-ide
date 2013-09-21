@@ -1,4 +1,32 @@
-                                   _         _     _
+This repository contains an experimental version of Leaflabs Maple IDE that uses
+the full libmaple code and directory structure and also uses an up to date toolchain.
+
+This version only works under Linux.
+
+Changes:
+ArmCompiler.java         Lots of changes to use the libmaple directory structure
+                         Not a very flexible build sequence, to many hardcoded directory 
+                         references but it works as a proof of concept.
+boards.txt               Some modifications to board defines to control the build process. 
+                         Only maple board definitions are updated and tested
+build/linux/make.sh      Installs gcc-arm-none-eabi-4_7-2013q1 toolchain
+                         and copies files from the libmaple directory
+                         copy main.cxx from wirish to parent directory 
+
+Installation:
+Install this distrubution and also the latest libmaple from github:
+https://github.com/leaflabs/libmaple.
+Add the path to your libmaple directory at the top of build/linux/make.sh
+or define the environment variable LIBMAPLEPATH: 
+export LIBMAPLEPATH='path/to/your/libmaple' 
+
+JAVA_HOME must probably also be defined:
+export JAVA_HOME=/usr/lib/jvm/'name_of_local_java_install'
+
+Run ./make.sh from inside the build/linux folder
+Run the IDE with ./run.sh 
+
+===================================================================================                                   _         _     _
              _ __ ___   __ _ _ __ | | ___   (_) __| | ___
             | '_ ` _ \ / _` | '_ \| |/ _ \  | |/ _` |/ _ \
             | | | | | | (_| | |_) | |  __/  | | (_| |  __/

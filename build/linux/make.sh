@@ -1,14 +1,18 @@
 #!/bin/sh
 
-# DIST_ARCHIVE=arm-2010q1-188-arm-none-eabi-toolchain-linux32.tar.gz
-# DIST_URL=http://static.leaflabs.com/pub/codesourcery/
+# Name toolchain archive file
 DIST_ARCHIVE=gcc-arm-none-eabi-4_7-2013q1-20130313-linux.tar.bz2
+# Url pointing to toolchain file
 DIST_URL=https://launchpad.net/gcc-arm-embedded/4.7/4.7-2013-q1-update/+download/
+# Name of extracted toolchain folder, will be linked to dist/tools/arm
 DIST_FOLDER=gcc-arm-none-eabi-4_7-2013q1
- 
+# Location of libmaple
+LIBMAPLEPATH=${LIBMAPLEPATH:="../../../libmaple"}
+
 # Set JAVA_HOME only if it is blank
 # Modify this if you aren't using java-6-sun; needed for lib/tools.jar
-JAVA_HOME=${JAVA_HOME:="/usr/lib/jvm/java-6-sun/"}
+#JAVA_HOME=${JAVA_HOME:="/usr/lib/jvm/java-6-sun/"}
+JAVA_HOME=${JAVA_HOME:="/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.25/"}
 
 ### -- SETUP DIST FILES ----------------------------------------
 
@@ -35,6 +39,12 @@ then
     exit 1
   fi
   ln -s -r dist/tools/$DIST_FOLDER dist/tools/arm
+fi
+
+if test ! -d ../../hardware/leaflabs/cores/maple/wirish
+then
+  cp -r $LIBMAPLEPATH/* ../../hardware/leaflabs/cores/maple
+  cp ../../hardware/leaflabs/cores/maple/wirish/main.cxx ../../hardware/leaflabs/cores/maple/
 fi
 
 ### -- SETUP WORK DIR -------------------------------------------
@@ -88,6 +98,8 @@ else
     cp dist/lib/librxtxSerial.so.x86_64 work/lib/librxtxSerial.so
     cp dist/lib/RXTXcomm.jar.x86_64 work/lib/RXTXcomm.jar
   fi
+  
+  ../shared/gen-version-string >work/lib/build-version.txt
 fi
 
 cd ../..
