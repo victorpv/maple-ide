@@ -266,12 +266,19 @@ public class ArmCompiler extends Compiler {
     File linkerScript = new File(corePath,"support"+File.separator+"ld"+File.separator+boardPrefs.get("build.linker"));
     File scriptIncludes = new File(corePath, "support"+File.separator+"ld");
     File seriesScriptIncludes;
+    File toolchainScriptIncludes;
     if (boardPrefs.get("build.series").equals("stm32f1")) {
         seriesScriptIncludes = new File(corePath, "support"+File.separator+"ld"+File.separator+"stm32"+File.separator+"series"+File.separator+boardPrefs.get("build.series")+File.separator+"performance");
     } else {
         seriesScriptIncludes = new File(corePath, "support"+File.separator+"ld"+File.separator+"stm32"+File.separator+"series"+File.separator+boardPrefs.get("build.series"));
     }
     File memScriptIncludes = new File(corePath, "support"+File.separator+"ld"+File.separator+"stm32"+File.separator+"mem"+File.separator+boardPrefs.get("build.mem"));
+    if (Preferences.get("build.toolchain") != null) {
+        toolchainScriptIncludes = new File(corePath, "support"+File.separator+"ld"+File.separator+"toolchains"+File.separator+Preferences.get("build.toolchain"));
+    } else {
+        toolchainScriptIncludes = new File(corePath, "support"+File.separator+"ld"+File.separator+"toolchains"+File.separator+"generic");
+    }
+
     File elf = new File(buildPath, primaryClassName + ".elf");
     File bin = new File(buildPath, primaryClassName + ".bin");
 
@@ -284,13 +291,12 @@ public class ArmCompiler extends Compiler {
         "-L" + scriptIncludes.getAbsolutePath(),
         "-L" + seriesScriptIncludes.getAbsolutePath(),
         "-L" + memScriptIncludes.getAbsolutePath(),
+        "-L" + toolchainScriptIncludes.getAbsolutePath(),
         "-mcpu="+boardPrefs.get("build.mcpu"),
         "-mthumb",
-//        "-nostartfiles",
         "-Xlinker", "--gc-sections",
         "-Xlinker", "-Map="+elf.getAbsolutePath()+".map",
         "-Xassembler",
-//        "--march=armv7-m",
         "-Wall",
         "-o", elf.getAbsolutePath()));
 
@@ -348,7 +354,6 @@ public class ArmCompiler extends Compiler {
       (Arrays.asList
        (Base.getArmBasePath() + "arm-none-eabi-gcc",
         "-mcpu="+boardPrefs.get("build.mcpu"),
-        "-march=armv7-m",
         "-mthumb",
         "-DBOARD_" + boardPrefs.get("build.board"),
         "-DMCU_" + boardPrefs.get("build.mcu"),
@@ -392,7 +397,6 @@ public class ArmCompiler extends Compiler {
         "-g",
         "-mcpu="+boardPrefs.get("build.mcpu"),
         "-mthumb",
-//        "-march=armv7-m",
         "-nostdlib",
         "-ffunction-sections",
         "-fdata-sections",
@@ -444,7 +448,6 @@ public class ArmCompiler extends Compiler {
         "-g",
         "-mcpu="+boardPrefs.get("build.mcpu"),
         "-mthumb",
-//        "-march=armv7-m",
         "-nostdlib",
         "-ffunction-sections",
         "-fdata-sections",
