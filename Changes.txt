@@ -1,0 +1,91 @@
+version 2 - may 2013 - using (almost) exact copy of libmaple
+============================================================================
+Work log:
+Latest version seems to compile ok
+
+Builds, loads and runs a test sketch with Servo library and SerialUSB.
+Toolchain gcc-arm-none-eabi-4_7-2013q1 tested, seems ok.
+
+Next
+needs a preferences build.toolchain ("generic") flag in preferences file that adds a -L linker path
+MIDI USB next
+
+Testing millis and delays
+
+Try to build and load a Netduino jtag image
+
+Testing:
+===========================================================
+custom-build libmaple arm-2012.09
+stdbool defines same true and false as wirish.h
+Total   20824
+
+custom-build libmaple gcc-arm-none-eabi-4_7-2013q1
+builds without problems
+Total   21840
+
+
+Installation:
+===========================================================
+Get latest maple-ide and libmaple
+Add the libmaple path to the top of make.sh file
+ 
+#Copy contents/link libmaple as maple, into hardware/leaflabs/cores/maple
+#Install toolchain into work/hardware/tools/arm
+
+Copy main.cxx into maple directory
+Copy an empty extra_libs.ld into maple/support/ld
+Check dfu-util stuff !!!!
+
+Changes
+==========================================================
+1)  app/src/processing/app/debug/ArmCompiler.java
+
+Changes to build paths and include directories
+
+-Xlinker flags corrected
+
+Added include paths to the assmbler
+
+Changed the build sequence to handle processor specific parts
+
+Added map file output in the linker step, this can ge helpful in debugging.
+
+Dont print the gc-sections, just noise
+
+Changed getBuildBase to  getBuildBase(String sourceFile, String buildPath)
+The buildPath argument is sent along to all the compile methods but actually the output location of 
+object files were determined in getBuildBase(sourceName) that used the object instance variable this.buildPath.
+
+
+
+4)  boards.txt
+Use the 
+build.mcpu=cortex-m3       this agrees with the compiler -mcpu flag               
+build.series           stm32f1
+build.line             performance
+#build.density          /* the density is already set in ..... file stm32f1/include/series/stm32.h:71 
+                            from the maple.build.mcu passed to the compiler
+#build.family=cortex-m3     not used
+
+
+
+Testing so far is done with a blinking sketch that echoes USB serial, works both as a flash and ram target
+
+It builds JTAG images, not tested on the board but mapfile looks ok, but using the maple bootloader for this is not a good idea.
+
+Using different toolchains
+
+
+arm-2012.09  from Mentor Graphics
+code size 15604
+
+
+
+gcc-arm-none-eabi-4_7-2012q4
+code size 17004
+the difference seems to mainly come from data used by crtbegin.o and libc.a
+
+
+
+
