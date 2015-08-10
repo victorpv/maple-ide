@@ -1,3 +1,9 @@
+WARNING OBSOLETE CONTENT, REPOSITORY WILL SOON BE REMOVED
+
+The contents of this repository are OBSOLETE due to new methods of adding boards and toolchains to the Aruino IDE
+
+
+================================================================================
 This repository contains an experimental version of Leaflabs Maple IDE that uses
 the full libmaple code and directory structure and also uses an up to date toolchain.
 
